@@ -1,0 +1,46 @@
+import random
+import sqlite3
+
+def generate_unique_numbers(upper_limit):
+    unique_numbers = random.sample(range(1, upper_limit + 1), 6)
+    return unique_numbers
+
+def save_to_database(numbers, upper_limit):
+    connection = sqlite3.connect("generated_numbers.db")
+
+    with connection:
+        connection.execute("""
+            CREATE TABLE IF NOT EXISTS generated_numbers (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                upper_limit INTEGER,
+                numbers TEXT
+            )
+        """)
+
+    with connection:
+        connection.execute("INSERT INTO generated_numbers (upper_limit, numbers) VALUES (?, ?)",
+                           (upper_limit, ', '.join(map(str, numbers))))
+
+    connection.close()
+
+allowed_upper_limits = [10, 20, 30, 40, 50]
+sets_to_generate = 10000
+
+while True:
+    upper_limit = input(f"Enter the upper limit ({', '.join(map(str, allowed_upper_limits))}): ")
+
+    try:
+        upper_limit = int(upper_limit)
+
+        if upper_limit not in allowed_upper_limits:
+            print("Try again. Please choose a valid upper limit.")
+        else:
+            for _ in range(sets_to_generate):
+                result = generate_unique_numbers(upper_limit)
+                print("Generated Unique Numbers:", result)
+                save_to_database(result, upper_limit)
+            break 
+
+    except ValueError:
+        print("Invalid input. Please enter a valid number.")
+        continue 
